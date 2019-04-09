@@ -1,4 +1,5 @@
-
+#include <vesc_msgs/VescStateStamped.h>
+#include <vesc_msgs/VescState.h>
 #include <pid/pid.h>
 
 using namespace pid_ns;
@@ -65,8 +66,9 @@ PidObject::PidObject() : error_(3, 0), filtered_error_(3, 0), error_deriv_(3, 0)
   while( ros::ok() && !ros::topic::waitForMessage<std_msgs::Float64>(setpoint_topic_, ros::Duration(10.)))
      ROS_WARN_STREAM("Waiting for first setpoint message.");
 
-  while( ros::ok() && !ros::topic::waitForMessage<std_msgs::Float64>(topic_from_plant_, ros::Duration(10.)))
+  while( ros::ok() && !ros::topic::waitForMessage<vesc_msgs::VescStateStamped>(topic_from_plant_, ros::Duration(10.)))
      ROS_WARN_STREAM("Waiting for first state message from the plant.");
+  
 
   // Respond to inputs until shut down
   while (ros::ok())
@@ -79,6 +81,17 @@ PidObject::PidObject() : error_(3, 0), filtered_error_(3, 0), error_deriv_(3, 0)
   }
 };
 
+int PidObject::round_setpoint(int val) {
+if (val <= 50) 
+return val; 
+int a = (val/50) * 50;
+int b = val+50;
+return (val - a > b - val)? b : a; 
+
+} 
+
+
+
 void PidObject::setpointCallback(const std_msgs::Float64& setpoint_msg)
 {
   setpoint_ = setpoint_msg.data;
@@ -86,11 +99,14 @@ void PidObject::setpointCallback(const std_msgs::Float64& setpoint_msg)
   new_state_or_setpt_ = true;
 }
 
-void PidObject::plantStateCallback(const std_msgs::Float64& state_msg)
+void PidObject::plantStateCallback(const vesc_msgs::VescStateStamped& state_msg)
 {
-  plant_state_ = state_msg.data;
-
+ if (abs(state_msg.state.speed - plant_old) >= limit){
+  plant_state_ = state_msg.state.speed;	
+  plant_old = plant_state_; 
   new_state_or_setpt_ = true;
+  }
+
 }
 
 void PidObject::pidEnableCallback(const std_msgs::Bool& pid_enable_msg)

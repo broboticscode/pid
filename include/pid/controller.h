@@ -38,6 +38,7 @@
 
 namespace pid_ns
 {
+
 class PidObject
 {
 public:
@@ -47,7 +48,7 @@ private:
   void doCalcs();
   void getParams(double in, double& value, double& scale);
   void pidEnableCallback(const std_msgs::Bool& pid_enable_msg);
-  void plantStateCallback(const std_msgs::Float64& state_msg);
+  void plantStateCallback(const vesc_msgs::VescStateStamped& state_msg);
   void printParameters();
   void reconfigureCallback(pid::PidConfig& config, uint32_t level);
   void setpointCallback(const std_msgs::Float64& setpoint_msg);
@@ -101,7 +102,8 @@ private:
   ros::Publisher control_effort_pub_;
   std::string topic_from_controller_, topic_from_plant_, setpoint_topic_, pid_enable_topic_;
 
-  std_msgs::Float64 control_msg_, state_msg_;
+  std_msgs::Float64 control_msg_
+  vesc_msgs::VescStateStamped state_msg_;
 
   // Diagnostic objects
   double min_loop_frequency_ = 1, max_loop_frequency_ = 1000;

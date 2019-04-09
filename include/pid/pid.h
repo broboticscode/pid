@@ -44,11 +44,15 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Float64MultiArray.h>
+#include <vesc_msgs/VescStateStamped.h>
+#include <vesc_msgs/VescState.h>
 #include <stdio.h>
 #include <string>
 
 namespace pid_ns
 {
+
+
 class PidObject
 {
 public:
@@ -59,9 +63,10 @@ public:
 
 private:
   void doCalcs();
+  int round_setpoint(int val); 	
   void getParams(double in, double& value, double& scale);
   void pidEnableCallback(const std_msgs::Bool& pid_enable_msg);
-  void plantStateCallback(const std_msgs::Float64& state_msg);
+  void plantStateCallback(const vesc_msgs::VescStateStamped& state_msg);
   void printParameters();
   void reconfigureCallback(pid::PidConfig& config, uint32_t level);
   void setpointCallback(const std_msgs::Float64& setpoint_msg);
@@ -72,7 +77,8 @@ private:
   bool pid_enabled_ = true;          // PID is enabled to run
   bool new_state_or_setpt_ = false;  // Indicate that fresh calculations need to be run
   double setpoint_ = 0;              // desired output of plant
-
+  double plant_old = 0; 
+  double limit = 25; 
   ros::Time prev_time_;
   ros::Duration delta_t_;
   bool first_reconfig_ = true;
@@ -116,7 +122,8 @@ private:
 
   std::string topic_from_controller_, topic_from_plant_, setpoint_topic_, pid_enable_topic_;
   std::string pid_debug_pub_name_;
-  std_msgs::Float64 control_msg_, state_msg_;
+  std_msgs::Float64 control_msg_;
+  vesc_msgs::VescStateStamped state_msg_;
 
   // Diagnostic objects
   double min_loop_frequency_ = 1, max_loop_frequency_ = 1000;
